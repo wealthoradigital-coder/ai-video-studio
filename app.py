@@ -15,7 +15,7 @@ st.markdown("""
 
 st.title("🎥 AI Premium Video Studio")
 st.caption("Your internal asset generation framework for automated faceless video campaigns.")
-st.hr()
+st.divider()
 
 # API Key inputs — clean, secure, and customizable
 gemini_key = st.text_input("Enter Gemini API Key", type="password")
