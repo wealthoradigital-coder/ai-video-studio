@@ -5,9 +5,7 @@ import re
 import requests
 from google import genai
 from google.genai import types
-# Using MoviePy v2.0 safe imports
-from moviepy import AudioFileClip, VideoFileClip, TextClip, CompositeVideoClip, concatenate_videoclips
-import edge_tts
+from moviepy import AudioFileClip, VideoFileClip, concatenate_videoclips
 
 # Clean up raw AI string responses
 def clean_json_string(raw_text: str) -> str:
@@ -66,7 +64,7 @@ def fetch_pexels_video(keyword: str, api_key: str, scene_num: int) -> str:
         print(f"⚠️ Video skip for Scene {scene_num}: {e}")
         return None
 
-# Step 3: Run the Orchestration Pipeline
+# Step 3: Run the Orchestration Pipeline (Server-Safe Setup)
 async def generate_final_video(topic: str, gemini_key: str, pexels_key: str, voice: str):
     blueprint = generate_video_blueprint(topic, gemini_key)
     video_segments = []
@@ -81,11 +79,11 @@ async def generate_final_video(topic: str, gemini_key: str, pexels_key: str, voi
         temp_files.append(audio_path)
         
         try:
-            # Generate premium TTS voiceover track
+            # Generate premium TTS voiceover track using edge-tts
             communicate = edge_tts.Communicate(text, voice)
             await communicate.save(audio_path)
             
-            # Download stock visual clip assets
+            # Download stock visual clip assets from Pexels
             video_path = fetch_pexels_video(keyword, pexels_key, num)
             
             if video_path:
@@ -100,17 +98,8 @@ async def generate_final_video(topic: str, gemini_key: str, pexels_key: str, voi
                 else:
                     timed_video = raw_video.with_duration(audio_clip.duration)
                 
-                # Add professional subtitle captions to the clip segment
-                caption_clip = (TextClip(text=text, 
-                                         font_size=32, 
-                                         color='white', 
-                                         size=(timed_video.width - 100, None),
-                                         method='caption')
-                                .with_duration(audio_clip.duration)
-                                .with_position(('center', 'bottom')))
-                
-                # Composite the text track cleanly above the video array
-                scened_video = CompositeVideoClip([timed_video, caption_clip]).with_audio(audio_clip)
+                # Attach audio cleanly to the video segment
+                scened_video = timed_video.with_audio(audio_clip)
                 video_segments.append(scened_video)
                 
         except Exception as scene_error:
@@ -119,15 +108,16 @@ async def generate_final_video(topic: str, gemini_key: str, pexels_key: str, voi
 
     if video_segments:
         output_name = "premium_output_video.mp4"
+        # Combine segments into final video file
         final_render = concatenate_videoclips(video_segments, method="compose")
         final_render.write_videofile(output_name, fps=24, codec="libx264", audio_codec="aac")
         
-        # Memory overhead cleanup management
+        # Close clips to free up server memory
         final_render.close()
         for segment in video_segments:
             segment.close()
             
-        # Clean up files completely
+        # Clean up temporary background audio and video pieces
         for file in temp_files:
             if os.path.exists(file):
                 try: os.remove(file)
