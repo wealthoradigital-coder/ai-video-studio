@@ -17,12 +17,12 @@ st.title("🎥 AI Premium Video Studio")
 st.caption("Your internal asset generation framework for automated faceless video campaigns.")
 st.divider()
 
-# API Key inputs — clean, secure, and customizable
-gemini_key = st.text_input("Enter Gemini API Key", type="password")
-pexels_key = st.text_input("Enter Pexels API Key", type="password")
+# API Keys hardcoded to prevent mobile RAM refresh loss
+gemini_key = "AQAb8RN6K0OhRzEqdYhHYeLNH6ONIsIHS_fu0us14YHXgQ6W214A"
+pexels_key = "oDSVW1AddcB3x9bYqFAH03Hd9DyMKfx1NKxn564640YYcuyp32wTQAFb"
 
 st.subheader("🎬 Video Parameters")
-topic = st.text_input("Video Topic Prompt", placeholder="e.g., Why constraints breed massive creativity")
+topic = st.text_input("Video Topic Prompt", placeholder="e.g., Why discipline beats motivation")
 voice_selection = st.selectbox(
     "Choose Narration Persona",
     [
@@ -35,8 +35,8 @@ voice_selection = st.selectbox(
 voice_id = "en-US-ChristopherNeural" if "Christopher" in voice_selection else "en-US-EmmaNeural"
 
 if st.button("Generate Master Asset Video 🚀"):
-    if not gemini_key or not pexels_key or not topic:
-        st.error("Please fill out all API Keys and the Target Topic prompt!")
+    if not topic:
+        st.error("Please fill out the Video Topic prompt!")
     else:
         with st.status("🛠️ Studio processing master track arrays...", expanded=True) as status:
             try:
